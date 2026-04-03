@@ -55,7 +55,13 @@ def create_wordcloud(selected_user,df):
 
     wc = WordCloud(width=500,height=500,min_font_size=10,background_color='white')
     temp['message'] = temp['message'].apply(remove_stop_words)
-    df_wc = wc.generate(temp['message'].str.cat(sep=" "))
+    
+    try:
+        df_wc = wc.generate(temp['message'].str.cat(sep=" "))
+    except ValueError:
+        # Handle case when no words are available
+        df_wc = wc.generate("No messages available")
+    
     return df_wc
 
 def most_common_words(selected_user,df):
@@ -76,7 +82,10 @@ def most_common_words(selected_user,df):
             if word not in stop_words:
                 words.append(word)
 
-    most_common_df = pd.DataFrame(Counter(words).most_common(20))
+    if len(words) == 0:
+        most_common_df = pd.DataFrame(columns=[0, 1])
+    else:
+        most_common_df = pd.DataFrame(Counter(words).most_common(20))
     return most_common_df
 
 def emoji_helper(selected_user,df):
@@ -85,7 +94,7 @@ def emoji_helper(selected_user,df):
 
     emojis = []
     for message in df['message']:
-        emojis.extend([c for c in message if c in emoji.UNICODE_EMOJI['en']])
+        emojis.extend([c for c in message if c in emoji.EMOJI_DATA])
 
     emoji_df = pd.DataFrame(Counter(emojis).most_common(len(Counter(emojis))))
 
